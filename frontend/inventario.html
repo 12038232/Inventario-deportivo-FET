@@ -1,14 +1,643 @@
-<h1>Inventario</h1>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario — Tienda Deportiva</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<table border="1" id="tabla">
-    <thead>
-        <tr>
+    :root {
+      --verde:    #1a8c4e;
+      --verde-dk: #0f5c33;
+      --verde-lt: #e8f8f0;
+      --negro:    #0d0d0d;
+      --gris-bg:  #f6f6f4;
+      --gris-bd:  #e2e2da;
+      --gris-md:  #888880;
+      --blanco:   #ffffff;
+      --rojo:     #d63031;
+      --amarillo: #f39c12;
+    }
+
+    body {
+      font-family: 'Barlow', sans-serif;
+      background: var(--gris-bg);
+      color: var(--negro);
+      min-height: 100vh;
+    }
+
+    /* ── Navbar ── */
+    nav {
+      background: var(--negro);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 60px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-brand {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--blanco);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .nav-brand span { color: #6ee4a6; }
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+    .nav-usuario {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.55);
+    }
+    .nav-usuario strong { color: var(--blanco); }
+    .btn-logout {
+      padding: 0.4rem 1rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.1); }
+
+    /* ── Layout principal ── */
+    main { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+
+    /* ── Tarjetas de estadísticas ── */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+    .stat {
+      background: var(--blanco);
+      border: 1px solid var(--gris-bd);
+      border-radius: 12px;
+      padding: 1.2rem 1.4rem;
+    }
+    .stat .num {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .stat .lbl { font-size: 0.8rem; color: var(--gris-md); margin-top: 4px; }
+    .stat.alerta .num { color: var(--rojo); }
+    .stat.ok .num     { color: var(--verde); }
+
+    /* ── Barra de acciones ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .toolbar h2 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      flex: 1;
+    }
+    .buscador {
+      padding: 0.6rem 1rem;
+      border: 1.5px solid var(--gris-bd);
+      border-radius: 8px;
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.9rem;
+      width: 220px;
+      background: var(--blanco);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .buscador:focus { border-color: var(--verde); }
+    select.filtro {
+      padding: 0.6rem 1rem;
+      border: 1.5px solid var(--gris-bd);
+      border-radius: 8px;
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.9rem;
+      background: var(--blanco);
+      outline: none;
+      cursor: pointer;
+    }
+    .btn-nuevo {
+      padding: 0.65rem 1.4rem;
+      background: var(--verde);
+      color: var(--blanco);
+      border: none;
+      border-radius: 8px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .btn-nuevo:hover { background: var(--verde-dk); }
+
+    /* ── Tabla ── */
+    .tabla-wrap {
+      background: var(--blanco);
+      border: 1px solid var(--gris-bd);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: var(--negro); }
+    thead th {
+      padding: 0.9rem 1.2rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgba(255,255,255,0.7);
+      text-align: left;
+    }
+    tbody tr { border-bottom: 1px solid var(--gris-bd); transition: background 0.15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--gris-bg); }
+    td {
+      padding: 0.85rem 1.2rem;
+      font-size: 0.9rem;
+      vertical-align: middle;
+    }
+    .badge-cat {
+      display: inline-block;
+      padding: 3px 10px;
+      background: var(--verde-lt);
+      color: var(--verde-dk);
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 500;
+    }
+    .badge-alerta {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      background: #fff3e0;
+      color: var(--amarillo);
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 500;
+    }
+    .badge-ok {
+      display: inline-block;
+      padding: 3px 10px;
+      background: var(--verde-lt);
+      color: var(--verde);
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 500;
+    }
+    .acciones { display: flex; gap: 6px; }
+    .btn-edit, .btn-del {
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid;
+      transition: background 0.15s;
+    }
+    .btn-edit { border-color: var(--gris-bd); background: var(--blanco); color: #444; }
+    .btn-edit:hover { background: var(--gris-bg); }
+    .btn-del  { border-color: #fbc8c8; background: #fff5f5; color: var(--rojo); }
+    .btn-del:hover { background: #ffe0e0; }
+
+    .sin-datos { text-align: center; padding: 3rem; color: var(--gris-md); font-size: 0.95rem; }
+
+    /* ── Modal ── */
+    .modal-bg {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-bg.abierto { display: flex; }
+    .modal {
+      background: var(--blanco);
+      border-radius: 16px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal h3 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+    .campo-modal { margin-bottom: 1.1rem; }
+    .campo-modal label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+    .campo-modal input,
+    .campo-modal select,
+    .campo-modal textarea {
+      width: 100%;
+      padding: 0.7rem 0.9rem;
+      border: 1.5px solid var(--gris-bd);
+      border-radius: 8px;
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .campo-modal input:focus,
+    .campo-modal select:focus,
+    .campo-modal textarea:focus { border-color: var(--verde); }
+    .modal-fila { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .modal-acciones { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; }
+    .btn-cancelar {
+      padding: 0.65rem 1.2rem;
+      border: 1.5px solid var(--gris-bd);
+      background: var(--blanco);
+      border-radius: 8px;
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .btn-guardar {
+      padding: 0.65rem 1.4rem;
+      background: var(--verde);
+      color: var(--blanco);
+      border: none;
+      border-radius: 8px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-guardar:hover { background: var(--verde-dk); }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem; right: 2rem;
+      background: var(--negro);
+      color: var(--blanco);
+      padding: 0.8rem 1.4rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      z-index: 300;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+    }
+    .toast.visible { opacity: 1; transform: translateY(0); }
+    .toast.verde { border-left: 4px solid #6ee4a6; }
+    .toast.rojo  { border-left: 4px solid var(--rojo); }
+
+    @media (max-width: 900px) {
+      .stats { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      main { padding: 1rem; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .buscador { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav>
+    <div class="nav-brand">⚽ Tienda <span>Deportiva</span></div>
+    <div class="nav-right">
+      <span class="nav-usuario">Hola, <strong id="nav-nombre">—</strong></span>
+      <button class="btn-logout" onclick="cerrarSesion()">Salir</button>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Estadísticas -->
+    <div class="stats">
+      <div class="stat ok">
+        <div class="num" id="s-total">—</div>
+        <div class="lbl">Total productos</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="s-stock">—</div>
+        <div class="lbl">Unidades en stock</div>
+      </div>
+      <div class="stat alerta">
+        <div class="num" id="s-alertas">—</div>
+        <div class="lbl">⚠ Stock bajo</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="s-categorias">—</div>
+        <div class="lbl">Categorías</div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <h2>Inventario</h2>
+      <input class="buscador" type="text" id="buscador" placeholder="Buscar producto..." oninput="filtrar()">
+      <select class="filtro" id="filtro-cat" onchange="filtrar()">
+        <option value="">Todas las categorías</option>
+      </select>
+      <button class="btn-nuevo" onclick="abrirModalNuevo()">+ Nuevo producto</button>
+    </div>
+
+    <!-- Tabla -->
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
             <th>Nombre</th>
-            <th>Stock</th>
+            <th>Categoría</th>
             <th>Precio</th>
-        </tr>
-    </thead>
-    <tbody></tbody>
-</table>
+            <th>Stock</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-body">
+          <tr><td colspan="7" class="sin-datos">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
 
-<script src="js/main.js"></script>
+  <!-- Modal nuevo / editar -->
+  <div class="modal-bg" id="modal-bg">
+    <div class="modal">
+      <h3 id="modal-titulo">Nuevo producto</h3>
+      <input type="hidden" id="prod-id">
+
+      <div class="campo-modal">
+        <label>Nombre del producto *</label>
+        <input type="text" id="prod-nombre" placeholder="Ej: Balón de fútbol N5">
+      </div>
+      <div class="campo-modal">
+        <label>Descripción</label>
+        <textarea id="prod-desc" rows="2" placeholder="Descripción breve..."></textarea>
+      </div>
+      <div class="campo-modal">
+        <label>Categoría *</label>
+        <select id="prod-categoria"></select>
+      </div>
+      <div class="modal-fila">
+        <div class="campo-modal">
+          <label>Precio (COP) *</label>
+          <input type="number" id="prod-precio" placeholder="85000" min="0">
+        </div>
+        <div class="campo-modal">
+          <label>Stock actual *</label>
+          <input type="number" id="prod-stock" placeholder="10" min="0">
+        </div>
+      </div>
+      <div class="campo-modal">
+        <label>Stock mínimo (alerta)</label>
+        <input type="number" id="prod-stock-min" placeholder="5" min="1">
+      </div>
+
+      <div class="modal-acciones">
+        <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
+        <button class="btn-guardar" onclick="guardarProducto()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast de notificaciones -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = 'http://localhost:5000';
+    let todosLosProductos = [];
+    let categorias = [];
+
+    // ── Verificar sesión ──────────────────────────────────
+    const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+    if (!usuario) { window.location.href = 'index.html'; }
+    document.getElementById('nav-nombre').textContent = usuario?.nombre || '';
+
+    // ── Cargar datos iniciales ────────────────────────────
+    async function cargarTodo() {
+      await Promise.all([cargarProductos(), cargarCategorias(), cargarAlertas()]);
+    }
+
+    async function cargarProductos() {
+      try {
+        const res = await fetch(`${API}/api/productos`);
+        todosLosProductos = await res.json();
+        renderTabla(todosLosProductos);
+        document.getElementById('s-total').textContent = todosLosProductos.length;
+        const totalStock = todosLosProductos.reduce((a, p) => a + p.stock, 0);
+        document.getElementById('s-stock').textContent = totalStock.toLocaleString();
+      } catch (e) {
+        mostrarToast('Error conectando al servidor', 'rojo');
+      }
+    }
+
+    async function cargarCategorias() {
+      try {
+        const res = await fetch(`${API}/api/categorias`);
+        categorias = await res.json();
+        document.getElementById('s-categorias').textContent = categorias.length;
+
+        // Llenar filtro de categorías
+        const filtro = document.getElementById('filtro-cat');
+        filtro.innerHTML = '<option value="">Todas las categorías</option>';
+        categorias.forEach(c => {
+          filtro.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
+        });
+
+        // Llenar select del modal
+        const sel = document.getElementById('prod-categoria');
+        sel.innerHTML = '';
+        categorias.forEach(c => {
+          sel.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
+        });
+      } catch (e) {}
+    }
+
+    async function cargarAlertas() {
+      try {
+        const res = await fetch(`${API}/api/productos/stock-bajo`);
+        const alertas = await res.json();
+        document.getElementById('s-alertas').textContent = alertas.length;
+      } catch (e) {}
+    }
+
+    // ── Renderizar tabla ──────────────────────────────────
+    function renderTabla(productos) {
+      const tbody = document.getElementById('tabla-body');
+      if (!productos.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="sin-datos">No se encontraron productos</td></tr>';
+        return;
+      }
+      tbody.innerHTML = productos.map((p, i) => `
+        <tr>
+          <td style="color:var(--gris-md);font-size:0.8rem">${i + 1}</td>
+          <td><strong>${p.nombre}</strong>${p.descripcion ? `<br><span style="font-size:0.78rem;color:var(--gris-md)">${p.descripcion}</span>` : ''}</td>
+          <td><span class="badge-cat">${p.categoria}</span></td>
+          <td>$${Number(p.precio).toLocaleString('es-CO')}</td>
+          <td><strong>${p.stock}</strong></td>
+          <td>${p.stock <= p.stock_minimo
+            ? `<span class="badge-alerta">⚠ Bajo</span>`
+            : `<span class="badge-ok">✓ OK</span>`}</td>
+          <td>
+            <div class="acciones">
+              <button class="btn-edit" onclick="abrirModalEditar(${p.id})">Editar</button>
+              <button class="btn-del"  onclick="eliminarProducto(${p.id}, '${p.nombre}')">Eliminar</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // ── Filtrar ───────────────────────────────────────────
+    function filtrar() {
+      const texto = document.getElementById('buscador').value.toLowerCase();
+      const cat   = document.getElementById('filtro-cat').value;
+      const filtrados = todosLosProductos.filter(p => {
+        const coincideTexto = p.nombre.toLowerCase().includes(texto) ||
+                              (p.descripcion || '').toLowerCase().includes(texto);
+        const coincideCat   = !cat || p.categoria === cat;
+        return coincideTexto && coincideCat;
+      });
+      renderTabla(filtrados);
+    }
+
+    // ── Modal nuevo ───────────────────────────────────────
+    function abrirModalNuevo() {
+      document.getElementById('modal-titulo').textContent = 'Nuevo producto';
+      document.getElementById('prod-id').value = '';
+      document.getElementById('prod-nombre').value = '';
+      document.getElementById('prod-desc').value = '';
+      document.getElementById('prod-precio').value = '';
+      document.getElementById('prod-stock').value = '';
+      document.getElementById('prod-stock-min').value = '5';
+      document.getElementById('modal-bg').classList.add('abierto');
+    }
+
+    function abrirModalEditar(id) {
+      const p = todosLosProductos.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('modal-titulo').textContent = 'Editar producto';
+      document.getElementById('prod-id').value = p.id;
+      document.getElementById('prod-nombre').value = p.nombre;
+      document.getElementById('prod-desc').value = p.descripcion || '';
+      document.getElementById('prod-precio').value = p.precio;
+      document.getElementById('prod-stock').value = p.stock;
+      document.getElementById('prod-stock-min').value = p.stock_minimo;
+      // Seleccionar la categoría correcta
+      const sel = document.getElementById('prod-categoria');
+      const cat = categorias.find(c => c.nombre === p.categoria);
+      if (cat) sel.value = cat.id;
+      document.getElementById('modal-bg').classList.add('abierto');
+    }
+
+    function cerrarModal() {
+      document.getElementById('modal-bg').classList.remove('abierto');
+    }
+
+    // ── Guardar (crear o actualizar) ──────────────────────
+    async function guardarProducto() {
+      const id     = document.getElementById('prod-id').value;
+      const nombre = document.getElementById('prod-nombre').value.trim();
+      const precio = document.getElementById('prod-precio').value;
+      const stock  = document.getElementById('prod-stock').value;
+      const id_cat = document.getElementById('prod-categoria').value;
+
+      if (!nombre || !precio || stock === '' || !id_cat) {
+        mostrarToast('Completa todos los campos obligatorios', 'rojo');
+        return;
+      }
+
+      const body = {
+        nombre,
+        descripcion:  document.getElementById('prod-desc').value,
+        precio:       parseFloat(precio),
+        stock:        parseInt(stock),
+        stock_minimo: parseInt(document.getElementById('prod-stock-min').value) || 5,
+        id_categoria: parseInt(id_cat)
+      };
+
+      try {
+        const url    = id ? `${API}/api/productos/${id}` : `${API}/api/productos`;
+        const method = id ? 'PUT' : 'POST';
+        const res    = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          mostrarToast(id ? 'Producto actualizado ✓' : 'Producto creado ✓', 'verde');
+          cerrarModal();
+          cargarTodo();
+        } else {
+          mostrarToast(data.error || 'Error al guardar', 'rojo');
+        }
+      } catch (e) {
+        mostrarToast('Error de conexión', 'rojo');
+      }
+    }
+
+    // ── Eliminar ──────────────────────────────────────────
+    async function eliminarProducto(id, nombre) {
+      if (!confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
+      try {
+        const res = await fetch(`${API}/api/productos/${id}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        if (res.ok) {
+          mostrarToast('Producto eliminado', 'verde');
+          cargarTodo();
+        }
+      } catch (e) {
+        mostrarToast('Error de conexión', 'rojo');
+      }
+    }
+
+    // ── Cerrar sesión ─────────────────────────────────────
+    async function cerrarSesion() {
+      await fetch(`${API}/api/logout`, { method: 'POST', credentials: 'include' });
+      localStorage.removeItem('usuario');
+      window.location.href = 'index.html';
+    }
+
+    // ── Toast ─────────────────────────────────────────────
+    function mostrarToast(msg, tipo = 'verde') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast ${tipo} visible`;
+      setTimeout(() => t.classList.remove('visible'), 3000);
+    }
+
+    // Cerrar modal clickando fuera
+    document.getElementById('modal-bg').addEventListener('click', function(e) {
+      if (e.target === this) cerrarModal();
+    });
+
+    cargarTodo();
+  </script>
+</body>
+</html>
